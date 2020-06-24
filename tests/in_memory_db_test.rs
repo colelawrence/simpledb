@@ -2,7 +2,7 @@ use simpledb;
 
 #[test]
 fn set_values_are_gettable() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     db.set(s("foo"), 10);
     assert_set(&mut db, s("foo"), 10);
@@ -10,14 +10,14 @@ fn set_values_are_gettable() {
 
 #[test]
 fn unset_values_return_none() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     assert_unset(&mut db, s("foo"));
 }
 
 #[test]
 fn values_can_be_unset() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     db.set(s("foo"), 10);
     db.unset(s("foo"));
@@ -27,7 +27,7 @@ fn values_can_be_unset() {
 
 #[test]
 fn rollback_reverts_only_current_transaction() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     db.begin_transaction();
     db.set(s("foo"), 10);
@@ -46,7 +46,7 @@ fn rollback_reverts_only_current_transaction() {
 
 #[test]
 fn commit_commits_all_transactions() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     db.begin_transaction();
     db.set(s("foo"), 10);
@@ -62,13 +62,13 @@ fn commit_commits_all_transactions() {
 
 #[test]
 fn commit_errors_if_no_transactions() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
     assert_tx_error(db.commit());
 }
 
 #[test]
 fn interleave_keys() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     db.set(s("foo"), 10);
     db.set(s("bar"), 10);
@@ -96,7 +96,7 @@ fn interleave_keys() {
 
 #[test]
 fn rollback_unset() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     db.set(s("foo"), 10);
     assert_set(&mut db, s("foo"), 10);
@@ -120,7 +120,7 @@ fn rollback_unset() {
 
 #[test]
 fn commit_unset() {
-    let mut db = simpledb::SimpleDB::new();
+    let mut db = simpledb::InMemoryDB::new();
 
     db.set(s("foo"), 10);
     assert_set(&mut db, s("foo"), 10);
@@ -146,11 +146,11 @@ fn s(s: &str) -> String {
     String::from(s)
 }
 
-fn assert_set(db: &mut simpledb::SimpleDB, key: String, value: u32) {
+fn assert_set(db: &mut simpledb::InMemoryDB, key: String, value: u32) {
     assert_eq!(db.get(key), Some(&value));
 }
 
-fn assert_unset(db: &mut simpledb::SimpleDB, key: String) {
+fn assert_unset(db: &mut simpledb::InMemoryDB, key: String) {
     assert_eq!(db.get(key), None);
 }
 

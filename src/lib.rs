@@ -1,13 +1,13 @@
 use std::collections::hash_map::HashMap;
 
-pub struct SimpleDB {
+pub struct InMemoryDB {
     depth: usize,
     transactions: Vec<HashMap<String, u32>>,
 }
 
-impl SimpleDB {
+impl InMemoryDB {
     pub fn new() -> Self {
-        SimpleDB {
+        InMemoryDB {
             depth: 0,
             transactions: vec![HashMap::new()],
         }
