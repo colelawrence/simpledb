@@ -1,5 +1,14 @@
 use std::collections::hash_map::HashMap;
 
+pub trait SimpleDB {
+    fn set(&mut self, key: String, value: u32);
+    fn get(&mut self, key: String) -> Option<&u32>;
+    fn unset(&mut self, key: String);
+    fn begin_transaction(&mut self);
+    fn rollback(&mut self) -> Result<(), String>;
+    fn commit(&mut self) -> Result<(), String>;
+}
+
 pub struct InMemoryDB {
     depth: usize,
     transactions: Vec<HashMap<String, u32>>,
@@ -12,26 +21,28 @@ impl InMemoryDB {
             transactions: vec![HashMap::new()],
         }
     }
+}
 
-    pub fn set(&mut self, key: String, value: u32) {
+impl SimpleDB for InMemoryDB {
+    fn set(&mut self, key: String, value: u32) {
         self.transactions[self.depth].insert(key, value);
     }
 
-    pub fn get(&mut self, key: String) -> Option<&u32> {
+    fn get(&mut self, key: String) -> Option<&u32> {
         self.transactions[self.depth].get(&key)
     }
 
-    pub fn unset(&mut self, key: String) {
+    fn unset(&mut self, key: String) {
         self.transactions[self.depth].remove(&key);
     }
 
-    pub fn begin_transaction(&mut self) {
+    fn begin_transaction(&mut self) {
         let new_transaction = self.transactions[self.depth].clone();
         self.transactions.push(new_transaction);
         self.depth = self.depth + 1;
     }
 
-    pub fn rollback(&mut self) -> Result<(), String> {
+    fn rollback(&mut self) -> Result<(), String> {
         if self.depth == 0 {
             return Err(String::from("No transactions in progress"));
         }
@@ -41,7 +52,7 @@ impl InMemoryDB {
         Ok(())
     }
 
-    pub fn commit(&mut self) -> Result<(), String> {
+    fn commit(&mut self) -> Result<(), String> {
         if self.depth == 0 {
             return Err(String::from("No transactions in progress"));
         }

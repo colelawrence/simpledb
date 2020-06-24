@@ -1,4 +1,4 @@
-use simpledb;
+use simpledb::SimpleDB;
 
 #[test]
 fn set_values_are_gettable() {
