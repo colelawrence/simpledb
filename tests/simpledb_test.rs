@@ -29,3 +29,25 @@ fn values_can_be_unset() {
 
     assert_eq!(db.get(key.clone()), None);
 }
+
+#[test]
+fn rollback_reverts_only_current_transaction() {
+    let key = String::from("foo");
+    let first_value: u32 = 10;
+    let second_value: u32 = 20;
+
+    let mut db = simpledb::SimpleDB::new();
+
+    db.begin_transaction();
+    db.set(key.clone(), first_value);
+    assert_eq!(db.get(key.clone()), Some(&first_value));
+
+    db.begin_transaction();
+    db.set(key.clone(), second_value);
+
+    db.rollback();
+    assert_eq!(db.get(key.clone()), Some(&first_value));
+
+    db.rollback();
+    assert_eq!(db.get(key.clone()), None);
+}

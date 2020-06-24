@@ -1,25 +1,38 @@
 use std::collections::hash_map::HashMap;
 
 pub struct SimpleDB {
-    values: HashMap<String, u32>,
+    depth: usize,
+    transactions: Vec<HashMap<String, u32>>,
 }
 
 impl SimpleDB {
     pub fn new() -> Self {
         SimpleDB {
-            values: HashMap::new(),
+            depth: 0,
+            transactions: vec![HashMap::new()],
         }
     }
 
     pub fn set(&mut self, key: String, value: u32) {
-        self.values.insert(key, value);
+        self.transactions[self.depth].insert(key, value);
     }
 
     pub fn get(&mut self, key: String) -> Option<&u32> {
-        self.values.get(&key)
+        self.transactions[self.depth].get(&key)
     }
 
     pub fn unset(&mut self, key: String) {
-        self.values.remove(&key);
+        self.transactions[self.depth].remove(&key);
+    }
+
+    pub fn begin_transaction(&mut self) {
+        let new_transaction = self.transactions[self.depth].clone();
+        self.transactions.push(new_transaction);
+        self.depth = self.depth + 1;
+    }
+
+    pub fn rollback(&mut self) {
+        self.transactions.pop();
+        self.depth = self.depth - 1;
     }
 }
