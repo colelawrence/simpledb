@@ -2,7 +2,7 @@ use simpledb;
 
 #[test]
 fn set_values_are_gettable() {
-    let key = String::from("foo");
+    let key = s("foo");
     let value: u32 = 10;
     let mut db = simpledb::SimpleDB::new();
 
@@ -12,7 +12,7 @@ fn set_values_are_gettable() {
 
 #[test]
 fn unset_values_return_none() {
-    let key = String::from("foo");
+    let key = s("foo");
     let mut db = simpledb::SimpleDB::new();
 
     assert_eq!(db.get(key.clone()), None);
@@ -20,7 +20,7 @@ fn unset_values_return_none() {
 
 #[test]
 fn values_can_be_unset() {
-    let key = String::from("foo");
+    let key = s("foo");
     let value: u32 = 10;
     let mut db = simpledb::SimpleDB::new();
 
@@ -32,7 +32,7 @@ fn values_can_be_unset() {
 
 #[test]
 fn rollback_reverts_only_current_transaction() {
-    let key = String::from("foo");
+    let key = s("foo");
     let first_value: u32 = 10;
     let second_value: u32 = 20;
 
@@ -55,7 +55,7 @@ fn rollback_reverts_only_current_transaction() {
 
 #[test]
 fn commit_commits_all_transactions() {
-    let key = String::from("foo");
+    let key = s("foo");
     let first_value: u32 = 10;
     let second_value: u32 = 20;
 
@@ -83,4 +83,8 @@ fn commit_errors_if_no_transactions() {
         db.commit(),
         Err(String::from("No transactions in progress"))
     )
+}
+
+fn s(s: &str) -> String {
+    String::from(s)
 }
