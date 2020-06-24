@@ -31,8 +31,23 @@ impl SimpleDB {
         self.depth = self.depth + 1;
     }
 
-    pub fn rollback(&mut self) {
+    pub fn rollback(&mut self) -> Result<(), String> {
+        if self.depth == 0 {
+            return Err(String::from("No transactions in progress"));
+        }
+
         self.transactions.pop();
         self.depth = self.depth - 1;
+        Ok(())
+    }
+
+    pub fn commit(&mut self) -> Result<(), String> {
+        if self.depth == 0 {
+            return Err(String::from("No transactions in progress"));
+        }
+
+        self.transactions = vec![self.transactions.pop().unwrap().clone()];
+        self.depth = 0;
+        Ok(())
     }
 }
