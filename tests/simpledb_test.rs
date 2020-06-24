@@ -118,6 +118,30 @@ fn rollback_unset() {
     assert_set(&mut db, s("foo"), 20);
 }
 
+#[test]
+fn commit_unset() {
+    let mut db = simpledb::SimpleDB::new();
+
+    db.set(s("foo"), 10);
+    assert_set(&mut db, s("foo"), 10);
+
+    db.begin_transaction();
+    db.unset(s("foo"));
+    assert_unset(&mut db, s("foo"));
+
+    assert_no_tx_error(db.commit());
+    assert_unset(&mut db, s("foo"));
+
+    db.begin_transaction();
+    assert_unset(&mut db, s("foo"));
+
+    db.set(s("foo"), 20);
+    assert_set(&mut db, s("foo"), 20);
+
+    assert_no_tx_error(db.commit());
+    assert_set(&mut db, s("foo"), 20);
+}
+
 fn s(s: &str) -> String {
     String::from(s)
 }
