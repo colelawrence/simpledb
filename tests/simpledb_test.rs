@@ -94,6 +94,30 @@ fn interleave_keys() {
     assert_set(&mut db, s("bar"), 10);
 }
 
+#[test]
+fn rollback_unset() {
+    let mut db = simpledb::SimpleDB::new();
+
+    db.set(s("foo"), 10);
+    assert_set(&mut db, s("foo"), 10);
+
+    db.begin_transaction();
+    assert_set(&mut db, s("foo"), 10);
+
+    db.set(s("foo"), 20);
+    assert_set(&mut db, s("foo"), 20);
+
+    db.begin_transaction();
+    db.unset(s("foo"));
+    assert_unset(&mut db, s("foo"));
+
+    assert_no_tx_error(db.rollback());
+    assert_set(&mut db, s("foo"), 20);
+
+    assert_no_tx_error(db.commit());
+    assert_set(&mut db, s("foo"), 20);
+}
+
 fn s(s: &str) -> String {
     String::from(s)
 }
@@ -103,7 +127,7 @@ fn assert_set(db: &mut simpledb::SimpleDB, key: String, value: u32) {
 }
 
 fn assert_unset(db: &mut simpledb::SimpleDB, key: String) {
-    assert_eq!(db.get(s("foo")), None);
+    assert_eq!(db.get(key), None);
 }
 
 fn assert_tx_error(result: Result<(), String>) {
