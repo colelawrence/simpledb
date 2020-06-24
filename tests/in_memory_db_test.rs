@@ -20,8 +20,9 @@ fn values_can_be_unset() {
     let mut db = simpledb::InMemoryDB::new();
 
     db.set(s("foo"), 10);
-    db.unset(s("foo"));
+    assert_set(&mut db, s("foo"), 10);
 
+    db.unset(s("foo"));
     assert_unset(&mut db, s("foo"));
 }
 
