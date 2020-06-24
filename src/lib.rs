@@ -15,7 +15,7 @@ impl SimpleDB {
         self.values.insert(key, value);
     }
 
-    pub fn get(&mut self, key: String) -> u32 {
-        *self.values.get(&key).unwrap()
+    pub fn get(&mut self, key: String) -> Option<&u32> {
+        self.values.get(&key)
     }
 }
