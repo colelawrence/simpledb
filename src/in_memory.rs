@@ -4,38 +4,79 @@ use super::SimpleDB;
 use super::TransactionError;
 
 pub struct InMemoryDB {
-    transaction_stack: Vec<HashMap<String, u32>>,
-    commit: HashMap<String, u32>,
+    // first in, last out, new transactions applied at front
+    transaction_stack: Vec<HashMap<String, Option<u32>>>,
+    commited_values: HashMap<String, u32>,
 }
 
 impl InMemoryDB {
     pub fn new() -> Self {
         InMemoryDB {
             transaction_stack: Vec::new(),
-            commit: HashMap::new(),
+            commited_values: HashMap::new(),
         }
     }
 }
 
 impl SimpleDB for InMemoryDB {
-    fn set(&mut self, key: String, value: u32) {}
-
-    fn get(&mut self, key: String) -> Option<&u32> {
-        None
+    fn set(&mut self, key: String, value: u32) {
+        if let Some(last_tx) = self.transaction_stack.first_mut() {
+            last_tx.insert(key, Some(value));
+        } else {
+            self.commited_values.insert(key, value);
+        };
     }
 
-    fn unset(&mut self, key: String) {}
+    fn get(&mut self, key: String) -> Option<&u32> {
+        if let Some(set_opt) = self
+            .transaction_stack
+            .iter()
+            .find_map(|tx_map|
+                tx_map.get(&key).map(|v| v.as_ref()))
+        {
+            return set_opt;
+        } else {
+            self.commited_values.get(&key)
+        }
+    }
 
-    fn begin_transaction(&mut self) {}
+    fn unset(&mut self, key: String) {
+        if let Some(last_tx) = self.transaction_stack.first_mut() {
+            last_tx.insert(key, None);
+        } else {
+            self.commited_values.remove(&key);
+        };
+    }
+
+    fn begin_transaction(&mut self) {
+        self.transaction_stack.insert(0, HashMap::new())
+    }
 
     fn rollback(&mut self) -> Result<(), TransactionError> {
-        Err(TransactionError::NoTransactionsInProgress)
+        if self.transaction_stack.is_empty() {
+            Err(TransactionError::NoTransactionsInProgress)
+        } else {
+            self.transaction_stack.remove(0);
+            Ok(())
+        }
     }
 
     fn commit(&mut self) -> Result<(), TransactionError> {
-        match self.transaction_stack.pop() {
-            Some(transaction) => Ok(self.commit.extend(transaction.into_iter())),
-            None => Err(TransactionError::NoTransactionsInProgress),
+        if self.transaction_stack.is_empty() {
+            Err(TransactionError::NoTransactionsInProgress)
+        } else {
+            let mut transactions_to_commit: Vec<HashMap<_, _>> =
+                self.transaction_stack.drain(..).collect();
+            transactions_to_commit.reverse(); // apply with end first
+            for hash_map in transactions_to_commit {
+                for (key, value_opt) in hash_map {
+                    match value_opt {
+                        Some(value) => self.commited_values.insert(key, value),
+                        None => self.commited_values.remove(&key),
+                    };
+                }
+            }
+            Ok(())
         }
     }
 }
@@ -194,6 +235,17 @@ mod tests {
 
         assert_no_tx_error(db.commit());
         assert_set!(&mut db, s("foo"), 20);
+    }
+
+    #[test]
+    fn get_value_from_before_commit() {
+        let mut db = InMemoryDB::new();
+        db.begin_transaction();
+        db.set(s("foo"), 10);
+        db.begin_transaction();
+        db.set(s("bar"), 10);
+        assert_no_tx_error(db.commit());
+        assert_set!(&mut db, s("foo"), 10);
     }
 
     fn s(s: &str) -> String {
