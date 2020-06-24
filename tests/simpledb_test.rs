@@ -66,6 +66,34 @@ fn commit_errors_if_no_transactions() {
     assert_tx_error(db.commit());
 }
 
+#[test]
+fn interleave_keys() {
+    let mut db = simpledb::SimpleDB::new();
+
+    db.set(s("foo"), 10);
+    db.set(s("bar"), 10);
+    assert_set(&mut db, s("foo"), 10);
+    assert_set(&mut db, s("bar"), 10);
+
+    db.begin_transaction();
+    db.set(s("foo"), 20);
+    assert_set(&mut db, s("foo"), 20);
+    assert_set(&mut db, s("bar"), 10);
+
+    db.begin_transaction();
+    db.set(s("bar"), 30);
+    assert_set(&mut db, s("foo"), 20);
+    assert_set(&mut db, s("bar"), 30);
+
+    assert_no_tx_error(db.rollback());
+    assert_set(&mut db, s("foo"), 20);
+    assert_set(&mut db, s("bar"), 10);
+
+    assert_no_tx_error(db.rollback());
+    assert_set(&mut db, s("foo"), 10);
+    assert_set(&mut db, s("bar"), 10);
+}
+
 fn s(s: &str) -> String {
     String::from(s)
 }
@@ -79,5 +107,9 @@ fn assert_unset(db: &mut simpledb::SimpleDB, key: String) {
 }
 
 fn assert_tx_error(result: Result<(), String>) {
-    assert_eq!(result, Err(String::from("No transactions in progress")))
+    assert_eq!(result, Err(String::from("No transactions in progress")));
+}
+
+fn assert_no_tx_error(result: Result<(), String>) {
+    assert_eq!(result, Ok(()));
 }
