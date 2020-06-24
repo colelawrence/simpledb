@@ -3,11 +3,10 @@ use simpledb;
 #[test]
 fn set_values_are_gettable() {
     let key = s("foo");
-    let value: u32 = 10;
     let mut db = simpledb::SimpleDB::new();
 
-    db.set(key.clone(), value);
-    assert_eq!(db.get(key.clone()), Some(&value));
+    db.set(key.clone(), 10);
+    assert_eq!(db.get(key.clone()), Some(&10));
 }
 
 #[test]
@@ -21,10 +20,9 @@ fn unset_values_return_none() {
 #[test]
 fn values_can_be_unset() {
     let key = s("foo");
-    let value: u32 = 10;
     let mut db = simpledb::SimpleDB::new();
 
-    db.set(key.clone(), value);
+    db.set(key.clone(), 10);
     db.unset(key.clone());
 
     assert_eq!(db.get(key.clone()), None);
@@ -33,21 +31,19 @@ fn values_can_be_unset() {
 #[test]
 fn rollback_reverts_only_current_transaction() {
     let key = s("foo");
-    let first_value: u32 = 10;
-    let second_value: u32 = 20;
 
     let mut db = simpledb::SimpleDB::new();
 
     db.begin_transaction();
-    db.set(key.clone(), first_value);
-    assert_eq!(db.get(key.clone()), Some(&first_value));
+    db.set(key.clone(), 10);
+    assert_eq!(db.get(key.clone()), Some(&10));
 
     db.begin_transaction();
-    db.set(key.clone(), second_value);
-    assert_eq!(db.get(key.clone()), Some(&second_value));
+    db.set(key.clone(), 20);
+    assert_eq!(db.get(key.clone()), Some(&20));
 
     db.rollback();
-    assert_eq!(db.get(key.clone()), Some(&first_value));
+    assert_eq!(db.get(key.clone()), Some(&10));
 
     db.rollback();
     assert_eq!(db.get(key.clone()), None);
@@ -56,19 +52,17 @@ fn rollback_reverts_only_current_transaction() {
 #[test]
 fn commit_commits_all_transactions() {
     let key = s("foo");
-    let first_value: u32 = 10;
-    let second_value: u32 = 20;
 
     let mut db = simpledb::SimpleDB::new();
 
     db.begin_transaction();
-    db.set(key.clone(), first_value);
+    db.set(key.clone(), 10);
 
     db.begin_transaction();
-    db.set(key.clone(), second_value);
+    db.set(key.clone(), 20);
 
     db.commit();
-    assert_eq!(db.get(key.clone()), Some(&second_value));
+    assert_eq!(db.get(key.clone()), Some(&20));
 
     assert_eq!(
         db.rollback(),
