@@ -17,3 +17,15 @@ fn unset_values_return_none() {
 
     assert_eq!(db.get(key.clone()), None);
 }
+
+#[test]
+fn values_can_be_unset() {
+    let key = String::from("foo");
+    let value: u32 = 10;
+    let mut db = simpledb::SimpleDB::new();
+
+    db.set(key.clone(), value);
+    db.unset(key.clone());
+
+    assert_eq!(db.get(key.clone()), None);
+}

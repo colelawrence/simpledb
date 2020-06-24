@@ -18,4 +18,8 @@ impl SimpleDB {
     pub fn get(&mut self, key: String) -> Option<&u32> {
         self.values.get(&key)
     }
+
+    pub fn unset(&mut self, key: String) {
+        self.values.remove(&key);
+    }
 }
